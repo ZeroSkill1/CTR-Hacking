@@ -1,0 +1,19 @@
+.3ds
+.open "code.bin", "patched_code.bin", 0x00100000
+
+.org 0x212640
+nop
+
+.org 0x212644
+nop
+
+.org 0x212648
+nop
+
+.org 0x21264C
+nop
+
+.org 0x212650
+B 0x2127E4
+
+.close
