@@ -1,0 +1,8 @@
+build
+lib*
+*.lst
+*.cia
+*.3dsx
+*.elf
+*.o
+.vscode*
