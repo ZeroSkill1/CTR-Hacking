@@ -26,7 +26,7 @@ QR Item 2 : CHARA_TIKKUN
 
 QR Code:
 
-![Image](/qrs/QRCODE_001.png)
+![Image](./qrs/QRCODE_001.png)
 # QR Code #2
 QR ID: QRCODE_002
 
@@ -38,7 +38,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_002.png)
+![Image](./qrs/QRCODE_002.png)
 # QR Code #3
 QR ID: QRCODE_003
 
@@ -50,7 +50,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_003.png)
+![Image](./qrs/QRCODE_003.png)
 # QR Code #4
 QR ID: QRCODE_004
 
@@ -62,7 +62,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_004.png)
+![Image](./qrs/QRCODE_004.png)
 # QR Code #5
 QR ID: QRCODE_005
 
@@ -74,7 +74,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_005.png)
+![Image](./qrs/QRCODE_005.png)
 # QR Code #6
 QR ID: QRCODE_006
 
@@ -86,7 +86,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_006.png)
+![Image](./qrs/QRCODE_006.png)
 # QR Code #7
 QR ID: QRCODE_007
 
@@ -98,7 +98,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_007.png)
+![Image](./qrs/QRCODE_007.png)
 # QR Code #8
 QR ID: QRCODE_008
 
@@ -110,7 +110,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_008.png)
+![Image](./qrs/QRCODE_008.png)
 # QR Code #9
 QR ID: QRCODE_009
 
@@ -122,7 +122,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_009.png)
+![Image](./qrs/QRCODE_009.png)
 # QR Code #10
 QR ID: QRCODE_010
 
@@ -134,7 +134,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_010.png)
+![Image](./qrs/QRCODE_010.png)
 # QR Code #11
 QR ID: QRCODE_011
 
@@ -146,7 +146,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_011.png)
+![Image](./qrs/QRCODE_011.png)
 # QR Code #12
 QR ID: QRCODE_012
 
@@ -158,7 +158,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_012.png)
+![Image](./qrs/QRCODE_012.png)
 # QR Code #13
 QR ID: QRCODE_013
 
@@ -170,7 +170,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_013.png)
+![Image](./qrs/QRCODE_013.png)
 # QR Code #14
 QR ID: QRCODE_014
 
@@ -182,7 +182,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_014.png)
+![Image](./qrs/QRCODE_014.png)
 # QR Code #15
 QR ID: QRCODE_015
 
@@ -194,7 +194,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_015.png)
+![Image](./qrs/QRCODE_015.png)
 # QR Code #16
 QR ID: QRCODE_016
 
@@ -206,7 +206,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_016.png)
+![Image](./qrs/QRCODE_016.png)
 # QR Code #17
 QR ID: QRCODE_017
 
@@ -218,7 +218,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_017.png)
+![Image](./qrs/QRCODE_017.png)
 # QR Code #18
 QR ID: QRCODE_018
 
@@ -230,7 +230,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_018.png)
+![Image](./qrs/QRCODE_018.png)
 # QR Code #19
 QR ID: QRCODE_019
 
@@ -242,7 +242,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_019.png)
+![Image](./qrs/QRCODE_019.png)
 # QR Code #20
 QR ID: QRCODE_020
 
@@ -254,7 +254,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_020.png)
+![Image](./qrs/QRCODE_020.png)
 # QR Code #21
 QR ID: QRCODE_021
 
@@ -266,7 +266,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_021.png)
+![Image](./qrs/QRCODE_021.png)
 # QR Code #22
 QR ID: QRCODE_022
 
@@ -278,7 +278,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_022.png)
+![Image](./qrs/QRCODE_022.png)
 # QR Code #23
 QR ID: QRCODE_023
 
@@ -290,7 +290,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_023.png)
+![Image](./qrs/QRCODE_023.png)
 # QR Code #24
 QR ID: QRCODE_024
 
@@ -302,7 +302,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_024.png)
+![Image](./qrs/QRCODE_024.png)
 # QR Code #25
 QR ID: QRCODE_025
 
@@ -314,7 +314,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_025.png)
+![Image](./qrs/QRCODE_025.png)
 # QR Code #26
 QR ID: QRCODE_026
 
@@ -326,7 +326,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_026.png)
+![Image](./qrs/QRCODE_026.png)
 # QR Code #27
 QR ID: QRCODE_027
 
@@ -338,7 +338,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_027.png)
+![Image](./qrs/QRCODE_027.png)
 # QR Code #28
 QR ID: QRCODE_028
 
@@ -350,7 +350,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_028.png)
+![Image](./qrs/QRCODE_028.png)
 # QR Code #29
 QR ID: QRCODE_029
 
@@ -362,7 +362,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_029.png)
+![Image](./qrs/QRCODE_029.png)
 # QR Code #30
 QR ID: QRCODE_030
 
@@ -374,7 +374,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_030.png)
+![Image](./qrs/QRCODE_030.png)
 # QR Code #31
 QR ID: QRCODE_031
 
@@ -386,7 +386,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_031.png)
+![Image](./qrs/QRCODE_031.png)
 # QR Code #32
 QR ID: QRCODE_032
 
@@ -398,7 +398,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_032.png)
+![Image](./qrs/QRCODE_032.png)
 # QR Code #33
 QR ID: QRCODE_033
 
@@ -410,7 +410,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_033.png)
+![Image](./qrs/QRCODE_033.png)
 # QR Code #34
 QR ID: QRCODE_034
 
@@ -422,7 +422,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_034.png)
+![Image](./qrs/QRCODE_034.png)
 # QR Code #35
 QR ID: QRCODE_035
 
@@ -434,7 +434,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_035.png)
+![Image](./qrs/QRCODE_035.png)
 # QR Code #36
 QR ID: QRCODE_036
 
@@ -446,7 +446,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_036.png)
+![Image](./qrs/QRCODE_036.png)
 # QR Code #37
 QR ID: QRCODE_037
 
@@ -458,7 +458,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_037.png)
+![Image](./qrs/QRCODE_037.png)
 # QR Code #38
 QR ID: QRCODE_038
 
@@ -470,7 +470,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_038.png)
+![Image](./qrs/QRCODE_038.png)
 # QR Code #39
 QR ID: QRCODE_039
 
@@ -482,7 +482,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_039.png)
+![Image](./qrs/QRCODE_039.png)
 # QR Code #40
 QR ID: QRCODE_040
 
@@ -494,7 +494,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_040.png)
+![Image](./qrs/QRCODE_040.png)
 # QR Code #41
 QR ID: QRCODE_041
 
@@ -506,7 +506,7 @@ QR Item 2 : body_050000
 
 QR Code:
 
-![Image](/qrs/QRCODE_041.png)
+![Image](./qrs/QRCODE_041.png)
 # QR Code #42
 QR ID: QRCODE_042
 
@@ -518,7 +518,7 @@ QR Item 2 : body_051000
 
 QR Code:
 
-![Image](/qrs/QRCODE_042.png)
+![Image](./qrs/QRCODE_042.png)
 # QR Code #43
 QR ID: QRCODE_043
 
@@ -530,7 +530,7 @@ QR Item 2 : body_052000
 
 QR Code:
 
-![Image](/qrs/QRCODE_043.png)
+![Image](./qrs/QRCODE_043.png)
 # QR Code #44
 QR ID: QRCODE_044
 
@@ -542,7 +542,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_044.png)
+![Image](./qrs/QRCODE_044.png)
 # QR Code #45
 QR ID: QRCODE_045
 
@@ -554,7 +554,7 @@ QR Item 2 : body_054000
 
 QR Code:
 
-![Image](/qrs/QRCODE_045.png)
+![Image](./qrs/QRCODE_045.png)
 # QR Code #46
 QR ID: QRCODE_046
 
@@ -566,7 +566,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_046.png)
+![Image](./qrs/QRCODE_046.png)
 # QR Code #47
 QR ID: QRCODE_047
 
@@ -578,7 +578,7 @@ QR Item 2 : body_056000
 
 QR Code:
 
-![Image](/qrs/QRCODE_047.png)
+![Image](./qrs/QRCODE_047.png)
 # QR Code #48
 QR ID: QRCODE_048
 
@@ -590,7 +590,7 @@ QR Item 2 : body_057000
 
 QR Code:
 
-![Image](/qrs/QRCODE_048.png)
+![Image](./qrs/QRCODE_048.png)
 # QR Code #49
 QR ID: QRCODE_049
 
@@ -602,7 +602,7 @@ QR Item 2 : body_058000
 
 QR Code:
 
-![Image](/qrs/QRCODE_049.png)
+![Image](./qrs/QRCODE_049.png)
 # QR Code #50
 QR ID: QRCODE_050
 
@@ -614,7 +614,7 @@ QR Item 2 : body_059000
 
 QR Code:
 
-![Image](/qrs/QRCODE_050.png)
+![Image](./qrs/QRCODE_050.png)
 # QR Code #51
 QR ID: QRCODE_051
 
@@ -626,7 +626,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_051.png)
+![Image](./qrs/QRCODE_051.png)
 # QR Code #52
 QR ID: QRCODE_052
 
@@ -638,7 +638,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_052.png)
+![Image](./qrs/QRCODE_052.png)
 # QR Code #53
 QR ID: QRCODE_053
 
@@ -650,7 +650,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_053.png)
+![Image](./qrs/QRCODE_053.png)
 # QR Code #54
 QR ID: QRCODE_054
 
@@ -662,7 +662,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_054.png)
+![Image](./qrs/QRCODE_054.png)
 # QR Code #55
 QR ID: QRCODE_055
 
@@ -674,7 +674,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_055.png)
+![Image](./qrs/QRCODE_055.png)
 # QR Code #56
 QR ID: QRCODE_056
 
@@ -686,7 +686,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_056.png)
+![Image](./qrs/QRCODE_056.png)
 # QR Code #57
 QR ID: QRCODE_057
 
@@ -698,7 +698,7 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_057.png)
+![Image](./qrs/QRCODE_057.png)
 # QR Code #58
 QR ID: QRCODE_058
 
@@ -710,4 +710,4 @@ QR Item 2 : (QR Code has no Item 2)
 
 QR Code:
 
-![Image](/qrs/QRCODE_058.png)
+![Image](./qrs/QRCODE_058.png)
