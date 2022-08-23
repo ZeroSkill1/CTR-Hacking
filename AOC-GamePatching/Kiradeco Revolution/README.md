@@ -5,7 +5,7 @@ A patch for the DLC menu in Kiradeco Revolution (0004000000068300) (JP) to skip 
 How to use:
 
 - Enable Luma3DS game patching.
-- Copy [code.ips](/code.ips) to `sd:/luma/titles/0004000000068300/exefs/code.ips`.
+- Copy [code.ips](/code.ips) to `sd:/luma/titles/0004000000068300/code.ips`.
 - Have the DLC installed (0004008C00068300).
 - Launch the game and enter the DLC section.
 - You should now be able to install/uninstall decorations without having to go through the eShop applet.
