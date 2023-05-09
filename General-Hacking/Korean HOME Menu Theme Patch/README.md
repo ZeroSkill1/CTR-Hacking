@@ -9,7 +9,9 @@ Notes:
 How to use:
 
 - Enable Luma3DS game patching.
-- Copy [code.ips](/code.ips) to `sd:/luma/titles/000400300000A902/code.ips`.
-- Copy [petit_LZ.bin](/petit_LZ.bin) to `sd:/luma/titles/000400300000A902/romfs/petit_LZ.bin`.
+- Copy [code.ips](./code.ips) to `sd:/luma/titles/000400300000A902/code.ips`.
+- Copy [petit_LZ.bin](./petit_LZ.bin) to `sd:/luma/titles/000400300000A902/romfs/petit_LZ.bin`.
 - Turn on your system.
 - Upon opening the menu on the top left corner of the HOME menu, the theme menu button and HOME menu layout button should reappear and be functional.
+
+Credit goes to [@cooolgamer](https://github.com/cooolgamer) for patching `petit_LZ.bin`.
