@@ -5,6 +5,7 @@ A patch for the Korean version of the Nintendo 3DS HOME menu to enable the usage
 Notes:
 - I used the extdata ID 000002CF.
 - This patch is known to work on the latest version of the KOR HOME menu at the time of writing this (v15361).
+- As the localization files do not include translations for the text related to themes and layout saving, some UI elements may appear without text. This does not affect functionality, however.
 
 How to use:
 
