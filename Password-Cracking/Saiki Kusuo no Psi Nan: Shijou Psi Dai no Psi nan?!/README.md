@@ -8,7 +8,7 @@ QR code data: `BNE_PSY_KUS_05623271`
 
 Content name: 楠子制服冬
 
-For use in: ふくそう of Ψ新ファッション
+For use in: `ふくそう` of `Ψ新ファッション`
 
 QR code:
 
@@ -20,7 +20,7 @@ QR code data: `BNE_PSY_GEO_51961190`
 
 Content name: ネコ(黄)
 
-For use in: せいぎょそうち of Ψ新ファッション
+For use in: `せいぎょそうち` of `Ψ新ファッション`
 
 QR code:
 
@@ -32,7 +32,7 @@ QR code data: `BNE_PSY_AMA_81630654`
 
 Content name: ウサギ(先黒)
 
-For use in: せいぎょそうち of Ψ新ファッション
+For use in: `せいぎょそうち` of `Ψ新ファッション`
 
 QR code:
 
@@ -44,7 +44,7 @@ QR code data: `BNE_PSY_YAM_26734741`
 
 Content name: イヌ(赤)
 
-For use in: せいぎょそうち of Ψ新ファッション
+For use in: `せいぎょそうち` of `Ψ新ファッション`
 
 QR code:
 
@@ -56,7 +56,7 @@ QR code data: `BNE_PSY_AEO_09667984`
 
 Content name: クマ(紫)
 
-For use in: せいぎょそうち of Ψ新ファッション
+For use in: `せいぎょそうち` of `Ψ新ファッション`
 
 QR code:
 
@@ -68,7 +68,7 @@ QR code data: `BNE_PSY_TAT_01364692`
 
 Content name: 楠雄はっぴ
 
-For use in: ふくそう of Ψ新ファッション
+For use in: `ふくそう` of `Ψ新ファッション`
 
 QR code:
 
