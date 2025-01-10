@@ -1,0 +1,182 @@
+; vim: filetype=asm
+
+.3ds
+.open "code.bin", "patched_code.bin", 0x00100000
+
+.org 0x001A17E4 ; GetLastResponseResult
+mov r0, #0
+pop {r4,pc}
+
+.org 0x001A1814 ; GetServiceLocatorData
+mov r0, #0
+pop {r4-r8,pc}
+
+.org 0x001A18E8 ; GetGameAuthenticationData
+mov r0, #0
+pop {r4-r8,pc}
+
+.org 0x0017DD48 ; login nasc/http check
+b 0x17DD74
+
+.org 0x0017DF74 ; svcloc nasc/http check
+b 0x17DFA8
+
+.org 0x0053CDFC ; prevent niconico from ever showing the "you are offline" dialog
+nop
+
+.org 0x0053CE0C ; prevent niconico from ever showing the "you are offline" dialog
+nop
+
+.org 0x0023331C ; trick niconico into thinking we're connected
+	mov r0, #1
+	bx lr
+
+.org 0x003149A8 ; trick niconico into thinking we're connected
+	mov r0, #1
+	bx lr
+
+.org 0x001723B8 ; trick niconico into thinking we don't have an NNID even if we have one
+	mov r0, #0
+	pop {r4-r6,pc}
+
+.org 0x00393280 ; make sure getting the NNID account id always fails
+	nop
+
+.org 0x003FE524
+	mov r1, #1 ; enable surema button on title screen
+
+.org 0x00100014 ; nop out the stubbed function
+	nop
+
+.org 0x001056B8 ; function extension to set up stack args
+	mov r0, sp
+	push {r0-r1, lr}
+	mov r0, #1
+	mov r1, #5
+	stmia sp, {r0,r1}
+	pop {r0-r1, pc}
+
+.org 0x002CB1B0
+	mov r1, #6 ; set the button text
+
+.org 0x002CB1B8
+	mov r1, #7 ; set the description on the top screen
+
+.org 0x002CB1E4
+	str r0, [sp, #72]
+	bl 0x1056B8 ; set up the correct flags for surema
+	mov r1, #3  ; set the action to be surema
+	
+.org 0x002CB338
+	dcd 0xCA4598 ; replace the icon to be the streetpass icon
+
+ ; .org 0x002CAFAC
+ ; 	; volume setting
+ ; 	mov r0, r6
+ ; 	mov r1, #1
+ ; 	adr r2, vol_icon
+ ; 	mov r3, #2
+ ; 	bl 0x00BF8524
+ ; 	; surema setting
+ ; 	mov r0, r6
+ ; 	mov r1, #3
+ ; 	adr r2, surema_icon
+ ; 	mov r3, #6
+ ; 	bl 0x00BF8524
+ ; 	b 0x002CB034
+ ; vol_icon:
+ ; 	dcd 0xCA45CC
+ ; surema_icon:
+ ; 	dcd 0xCA4594
+ ; 
+ ; 
+ ; 
+ ; ; add_toggle_option(this@R0, menu index@R1, icon file name address@R2, setting name start number@R3
+ ; 
+ ; .org 0x00BF8524 
+ ; 
+ ; 	; begin function
+ ; 
+ ; 	push {r0-r8,lr}
+ ; 
+ ; 	sub sp, sp, #28   ; make room for all the things
+ ; 
+ ; 	; construct text_thing
+ ; 
+ ; 	adr r4, textpath  ; &"AppSettingSceneText.txt"
+ ; 
+ ; 	str r4, [sp, #4]  ; text_thing[1] = textpath;
+ ; 	mov r4, #0        ;
+ ; 	str r4, [sp, #8]  ; text_thing[2] = 0;
+ ; 	str r4, [sp, #12]  ; text_thing[3] = 0;
+ ; 	str r4, [sp, #16] ; text_thing[4] = 0;
+ ; 	str r2, [sp, #24]
+ ; 
+ ; 	mov r4, r0        ; r4 = this;
+ ; 
+ ; 	mov r7, r1        ; r7 = menu index
+ ; 
+ ; 	push {r2-r3}
+ ; 	bl 0x1114AC       ; menu_thing = sub_1114AC(); (spoils: r0, r1, r2)
+ ; 	pop {r2-r3}
+ ; 
+ ; 	str r0, [sp, #20]
+ ; 
+ ; 	; set up text_thing
+ ; 
+ ; 	add r0, sp, #4    ; text_thing
+ ; 	mov r1, r3        ; r1 = setting name start number
+ ; 	bl 0x52F2E8       ; chain_thing = sub_52F2E8(text_thing, setting name start number);
+ ; 	add r1, r1, #1    ; r1 = setting name start number (r1) + 1
+ ; 	bl 0x52F2E8       ; chain_thing = sub_52F2E8(chain_thing, setting name start number + 1);
+ ; 
+ ; 	; create string maybe from chain_thing
+ ; 
+ ; 	mov r1, r0        ; r1 = chain_thing
+ ; 	add r0, sp        ; r0 = text thing
+ ; 	push {r1-r3}
+ ; 	bl 0x52EDAC       ; sub_52EDAC(string maybe, chain_thing);
+ ; 	pop {r1-r3}
+ ; 	mov r3, r0        ; r3 = string maybe
+ ; 
+ ; 	; set up menu thing using text thing and string maybe)
+ ; 
+ ; 	mov r0, r4        ; this
+ ; 	mov r1, r7        ; menu index
+ ; 	add r2, sp, #20   ; icon file name address reference
+ ;     mov r3, sp        ; string maybe (already in r3)
+ ; 	sub sp, sp, #8    ; make space for two stack args
+ ; 	mov r6, #1        ; first flag arg is 1
+ ; 	str r6, [sp]      ; first flag arg is 1
+ ; 	add r6, #4        ; second flag arg is 5
+ ; 	str r6, [sp, #4]  ; second flag arg is 5
+ ; 	bl 0x2CB344       ; sub_2CB344(this, menu index, icon file name address reference, string maybe, flag arg 1, flag arg 2)
+ ; 
+ ; 	; deallocate stack space for two stack args
+ ; 
+ ; 	add sp, sp, #8
+ ; 
+ ; 	; destroy string maybe
+ ; 
+ ; 	add r0, sp   ; r0 = string maybe
+ ; 
+ ; 	bl 0x21670C       ; sub_21670C(string maybe); // probably destroys it
+ ; 
+ ; 	; add the result to menu_thing
+ ; 
+ ; 	mov r8, r5       ; step 1 = menu_thing
+ ; 	ldr r8, [r5]     ; step 2 = *(step 1)
+ ; 	ldr r8, [r8, #8] ; step 3 = *(step 2 + 8)
+ ; 	ldr r0, [sp, #20]  ; r0 = menu_thing
+ ; 	ldr r1, [sp, #8] ; r1 = text_thing[2]
+ ; 	blx r8           ; step 3(menu_thing, text_thing[2])
+ ; 
+ ; 	add sp, sp, #20  ; deallocate stack for all of the things
+ ; 
+ ; 	; return
+ ; 
+ ; 	pop {r0-r8,pc}
+ ; 
+ ; textpath:
+ ; 	dcd 0x002CB0D8 ; points to "AppSettingSceneText.txt"
+.close

@@ -1,0 +1,43 @@
+.3ds
+.open "code.bin", "patched_code.bin", 0x00100000
+
+.org 0x001A17E4 ; GetLastResponseResult
+mov r0, #0
+pop {r4,pc}
+
+.org 0x001A1814 ; GetServiceLocatorData
+mov r0, #0
+pop {r4-r8,pc}
+
+.org 0x001A18E8 ; GetGameAuthenticationData
+mov r0, #0
+pop {r4-r8,pc}
+
+.org 0x0017DD48 ; login nasc/http check
+b 0x17DD74
+
+.org 0x0017DF74 ; svcloc nasc/http check
+b 0x17DFA8
+
+.org 0x0053CDFC
+nop
+
+.org 0x0053CE0C
+nop
+
+.org 0x0023331C
+mov r0, #3
+bx lr
+
+.org 0x003149A8
+mov r0, #3
+bx lr
+
+.org 0x001723B8
+mov r0, #0
+pop {r4-r6,pc}
+
+.org 0x00393280
+nop
+
+.close
