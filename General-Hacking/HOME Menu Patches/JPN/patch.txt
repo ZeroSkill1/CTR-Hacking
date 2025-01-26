@@ -1,0 +1,12 @@
+.3ds
+.open "code.bin", "patched_code.bin", 0x00100000
+
+.org 0x0026F57C ; patch out nnid check on badge data reading
+mov r0, #0 ; always return good
+pop {r4-r6, pc}
+
+.org 0x0026F5C8 ; patch out nnid check on badge data creation
+b 0x0026F5E4 ; skip the check
+
+
+.close
