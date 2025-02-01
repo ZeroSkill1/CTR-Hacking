@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: Unlicense
-
+#include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
@@ -23,7 +22,8 @@ typedef int16_t s16;
 typedef int8_t s8;
 
 namespace xorshift {
-	static const u16 crypt_lut[280] = {
+	/* first 254 primes */
+	static const u16 primes_lut[280] = {
 	  3u,    5u,    7u,    11u,   13u,   17u,   19u,   23u,   29u,   31u,
 	  37u,   41u,   43u,   47u,   53u,   59u,   61u,   67u,   71u,   73u,
 	  79u,   83u,   89u,   97u,   101u,  103u,  107u,  109u,  113u,  127u,
@@ -77,9 +77,7 @@ namespace xorshift {
 
 			state[3] = s0 ^ (s0 << 11) ^ ((s0 ^ (s0 << 11)) >> 8) ^ s3 ^ (s3 >> 19);
 
-			return (input ?
-				state[3] % input :
-				state[3]);
+			return input ? state[3] % input : state[3];
 		}
 
 	private:
@@ -106,18 +104,14 @@ namespace xorshift {
 		eof_data *eof_info() { return reinterpret_cast<eof_data *>(&this->file[this->data_size()]); }
 		u32 data_size() { return this->size - sizeof(eof_data); }
 
-		void generate_cryptstream() {
-			u32 xorshift_state[4] = { 0 };
-			u32 *cs_u32 = reinterpret_cast<u32 *>(this->cryptstream);
-			u8 *cs_u8 = reinterpret_cast<u8 *>(this->cryptstream);
+		void generate_xor_table() {
+			u32 *cs_u32 = reinterpret_cast<u32 *>(this->xor_table);
+			u8 *cs_u8 = reinterpret_cast<u8 *>(this->xor_table);
 
 			*cs_u32 = this->eof_info()->xorshift_seed;
 
-			while (!this->eof_info()->xorshift_seed) {
-				printf("THIS SHOULD NOT RUN!\n");
+			while (!this->eof_info()->xorshift_seed)
 				*cs_u32 = this->eof_info()->xorshift_seed = xorshift::global_seedgen.scramble(0);
-
-			}
 
 			xorshift::algorithm alg(*cs_u32);
 
@@ -145,74 +139,88 @@ namespace xorshift {
 			}
 		}
 
-		int decrypt_and_verify() {
-			if (!this->eof_info()->xorshift_seed) {
-				fprintf(stderr, "seed cannot be zero for xorshift decryption\n");
-				return 0;
-			}
-
-			if (crc32(0, this->file, size - 8) != this->eof_info()->crc) {
-				fprintf(stderr, "CRC checksum mismatch\n");
-				return 0;
-			}
-
+		u32 crypt(u32 seed) {
 			u8 *stream = this->file;
 
-			this->generate_cryptstream();
+			this->eof_info()->xorshift_seed = seed;
+			this->generate_xor_table();
 
 			u32 processed = 0;
 			for (u16 v8 = 0; processed < this->data_size(); processed++) {
 				u8 processed_lobyte = (u8)(processed & 0xFF);
 				if (!processed_lobyte)
-					v8 = crypt_lut[this->cryptstream[reinterpret_cast<u8 *>(&processed)[1] + 4]];
-				*stream++ ^= this->cryptstream[(u8)((processed_lobyte + 1) * v8) + 4];
+					v8 = primes_lut[this->xor_table[reinterpret_cast<u8 *>(&processed)[1] + 4]];
+				*stream++ ^= this->xor_table[(u8)((processed_lobyte + 1) * v8) + 4];
 			}
+
+			return reinterpret_cast<u32 *>(this->xor_table)[0];
+		}
+
+		int verify_and_decrypt() {
+			if (!this->eof_info()->xorshift_seed) {
+				fprintf(stderr, "seed cannot be zero for xorshift decryption\n");
+				return 0;
+			}
+
+			if (crc32(0, this->file, this->data_size()) != this->eof_info()->crc) {
+				fprintf(stderr, "CRC32 checksum mismatch\n");
+				return 0;
+			}
+
+			this->crypt(this->eof_info()->xorshift_seed);
 
 			return 1;
 		}
 
-		u8 cryptstream[0x104] = { 0 };
-		u8 *file;
-		u32 size;
+		void encrypt() {
+			/* for xorshift encryption, seed is 0, new seed results from crypt */
+			this->eof_info()->xorshift_seed = this->crypt(0);
+			this->eof_info()->crc = crc32(0, this->file, this->data_size());
+		}
+
+		u8 xor_table[0x104] = { 0 };
+		u8 *file = nullptr;
+		u32 size = 0;
 	};
 }
 
-void hexprint(void *input, size_t len, bool upper) {
+void hexprint(void *input, size_t len, bool upper = false, bool space = false) {
 	const char *fmt = upper ? "%02X" : "%02x";
-	for (size_t i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++) {
 		printf(fmt, reinterpret_cast<u8 *>(input)[i]);
+		if (space && i != len - 1)
+			fputc(' ', stdout);
+	}
 
 	fputc('\n', stdout);
 }
 
-int load_file_into_memory(char *path, void **out_contents, u32 *out_size) {
+int load_file_into_memory(char *path, void **out_contents, u32 *out_size, u32 extra = 0) {
 	struct stat st;
 	if (stat(path, &st) == -1) {
 		perror("stat failed");
 		return 0;
 	}
 
-	u8 *mem = (u8 *)malloc(st.st_size);
+	size_t mem_size = st.st_size + extra;
+
+	u8 *mem = (u8 *)malloc(mem_size);
 	if (!mem) {
-		fprintf(stderr, "could not allocate %ld bytes for file\n", st.st_size);
+		fprintf(stderr, "could not allocate %ld bytes for file\n", mem_size);
 		return 0;
 	}
 
 	FILE *f = fopen(path, "r");
-	if (!f) {
-		perror("failed opening file");
-		fclose(f);
+	if (!f || fread(mem, 1, st.st_size, f) != st.st_size) {
+		perror("failed opening/reading from file");
+		if (f) fclose(f);
 		free(mem);
 		return 0;
 	}
 
-	if (fread(mem, 1, st.st_size, f) != st.st_size) {
-		perror("failed reading from file");
-		fclose(f);
-		free(mem);
-	}
+	if (extra) memset(&mem[st.st_size], 0, extra);
 
-	*out_size = st.st_size;
+	*out_size = mem_size;
 	*out_contents = mem;
 
 	fclose(f);
@@ -221,9 +229,17 @@ int load_file_into_memory(char *path, void **out_contents, u32 *out_size) {
 }
 
 namespace swutil {
-	void keygen(void *head, u8 *out_key) {
-		u32 xorshift_state[4] = { 0 };
+	struct crypted_file {
+		u8 nonce[0xC];
+		u8 _pads[4];
+		u8 ccm_tag[0x10];
+		u8 file_data[];
+	};
 
+	static_assert(offsetof(crypted_file, ccm_tag) == 0x10);
+	static_assert(sizeof(crypted_file) == 0x20);
+
+	void keygen(void *head, u8 *out_key) {
 		u32 valbase = reinterpret_cast<u32 *>(head)[4] & ~1;
 
 		u32 seed_part1 = reinterpret_cast<u32 *>(head)[3];
@@ -240,6 +256,8 @@ namespace swutil {
 	}
 
 	int decrypt(void *input, u8 *key, u32 size) {
+		crypted_file *cf = reinterpret_cast<crypted_file *>(input);
+
 		EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 		if (!ctx) {
 			fprintf(stderr, "could not create EVP cipher context\n");
@@ -252,18 +270,18 @@ namespace swutil {
 			return 0;
 		}
 
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, 0xC, NULL);
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, 0x10, &reinterpret_cast<u8 *>(input)[0x10]);
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, sizeof(crypted_file::nonce), NULL);
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, sizeof(crypted_file::ccm_tag), cf->ccm_tag);
 
-		if (!EVP_DecryptInit(ctx, 0, key, reinterpret_cast<u8 *>(input))) {
-			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher\n");
+		if (!EVP_DecryptInit(ctx, 0, key, cf->nonce)) {
+			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher for decryption\n");
 			EVP_CIPHER_CTX_free(ctx);
 			return 0;
 		}
 
 		int outl = 0;
 
-		if (!EVP_DecryptUpdate(ctx, &reinterpret_cast<u8 *>(input)[0x20], &outl, &reinterpret_cast<u8 *>(input)[0x20], size - 0x20)) {
+		if (!EVP_DecryptUpdate(ctx, cf->file_data, &outl, cf->file_data, size - sizeof(crypted_file))) {
 			fprintf(stderr, "DecryptUpdate failed (possibly authentication failed)\n");
 			EVP_CIPHER_CTX_free(ctx);
 			return 0;
@@ -272,29 +290,70 @@ namespace swutil {
 		EVP_CIPHER_CTX_free(ctx);
 		return 1;
 	}
+
+	int encrypt(void *input, u8 *key, u32 size) {
+		crypted_file *cf = reinterpret_cast<crypted_file *>(input);
+
+		EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+		if (!ctx) {
+			fprintf(stderr, "could not create EVP cipher context\n");
+			return 0;
+		}
+
+		if (!EVP_CipherInit(ctx, EVP_aes_128_ccm(), 0, 0, false)) {
+			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher\n");
+			EVP_CIPHER_CTX_free(ctx);
+			return 0;
+		}
+
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, sizeof(crypted_file::nonce), NULL);
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, sizeof(crypted_file::ccm_tag), NULL);
+
+		memset(cf, 0, sizeof(crypted_file));
+		RAND_bytes(cf->nonce, sizeof(cf->nonce));
+
+		if (!EVP_EncryptInit(ctx, 0, key, cf->nonce)) {
+			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher for encryption\n");
+			EVP_CIPHER_CTX_free(ctx);
+			return 0;
+		}
+
+		int outl = 0;
+
+		if (!EVP_EncryptUpdate(ctx, cf->file_data, &outl, cf->file_data, size - sizeof(crypted_file))) {
+			fprintf(stderr, "EncryptUpdate failed\n");
+			EVP_CIPHER_CTX_free(ctx);
+			return 0;
+		}
+
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, sizeof(crypted_file::ccm_tag), cf->ccm_tag);
+		EVP_CIPHER_CTX_free(ctx);
+		return 1;
+	}
 };
 
-int save_decrypted_file(char *src_filename, void *file, u32 size) {
-	size_t dec_path_size = strlen(dirname(src_filename)) + strlen(basename(src_filename)) + sizeof("_dec.sw") + 2;
-	char *dec_path = (char *)malloc(dec_path_size);
-	dec_path[dec_path_size - 1] = '\0';
-	if (!dec_path) {
-		fprintf(stderr, "could not allocate memory for decrypted %s path\n", src_filename);
+int save_crypted_file(char *src_filename, void *file, u32 size, bool decrypt = true) {
+	size_t path_size = strlen(dirname(src_filename)) + strlen(basename(src_filename)) + sizeof("_xxx.sw") + 2;
+	char *path = (char *)malloc(path_size);
+	path[path_size - 1] = '\0';
+	if (!path) {
+		fprintf(stderr, "could not allocate memory for %s %s path\n", decrypt ? "decrypted" : "encrypted", src_filename);
 		return 0;
 	}
-	snprintf(dec_path, dec_path_size, "%s/dec_%s", dirname(src_filename), basename(src_filename));
+	snprintf(path, path_size, decrypt ? "%s/dec_%s" : "%s/enc_%s", dirname(src_filename), basename(src_filename));
 
-	FILE *o = fopen(dec_path, "w");
+	FILE *o = fopen(path, "w");
 	fwrite(file, 1, size - sizeof(xorshift::file_wrapper::eof_data), o);
 	fclose(o);
 
-	printf("decrypted %s to %s\n", src_filename, dec_path);
-	free(dec_path);
+	printf("%s %s to %s\n", decrypt ? "decrypted" : "encrypted", src_filename, path);
+	free(path);
 
 	return 1;
 }
 
 int main(int argc, char **argv) {
+	/* TODO: add encrypt mode in cli arg handling */
 	void *head = NULL;
 	u32 size = 0;
 
@@ -310,13 +369,13 @@ int main(int argc, char **argv) {
 
 	xorshift::file_wrapper xs_headsw(head, size);
 
-	if (!xs_headsw.decrypt_and_verify()) {
+	if (!xs_headsw.verify_and_decrypt()) {
 		fprintf(stderr, "xorshift decryption/verification of head.sw failed\n");
 		free(head);
 		return 1;
 	}
 
-	if (!save_decrypted_file(argv[1], head, size)) {
+	if (!save_crypted_file(argv[1], head, size)) {
 		fputs("could not save decrypted head.sw\n", stderr);
 		free(head);
 		return 1;
@@ -324,13 +383,9 @@ int main(int argc, char **argv) {
 
 	u8 ccm_key[16] = { 0 };
 
-	printf("%016lX\n", (uintptr_t)head);
 	swutil::keygen(head, ccm_key);
 
-	puts("CCM key: ");
-	hexprint(ccm_key, sizeof(ccm_key), false);
-
-	if (argc > 2) {
+ 	if (argc > 2) {
 		for (int i = 0; i < argc - 2; i++) {
 			void *savefile_contents = NULL;
 			u32 savefile_size = 0;
@@ -346,19 +401,17 @@ int main(int argc, char **argv) {
 				continue;
 			}
 
-			savefile_size -= 32;
-
-			printf("aes decrypt OK\n");
+			savefile_size -= sizeof(swutil::crypted_file);
 
 			xorshift::file_wrapper xs_save(&reinterpret_cast<u8 *>(savefile_contents)[0x20], savefile_size);
 
-			if (!xs_save.decrypt_and_verify()) {
+			if (!xs_save.verify_and_decrypt()) {
 				fprintf(stderr, "%s xorshift decrypt/verify failed\n", argv[2 + i]);
 				free(savefile_contents);
 				continue;
 			}
 
-			if (!save_decrypted_file(argv[2 + i], xs_save.file, xs_save.data_size())) {
+			if (!save_crypted_file(argv[2 + i], xs_save.file, xs_save.data_size())) {
 				fprintf(stderr, "could not save decrypted %s\n", argv[2 + i]);
 				free(savefile_contents);
 				continue;

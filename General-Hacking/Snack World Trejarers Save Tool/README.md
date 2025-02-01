@@ -1,5 +1,3 @@
-<!-- SPDX-License-Identifier: Unlicense -->
-
 # Snack World Trejareres Save Tool
 
 Snack World Trejarers is a Japanese 3DS title which uses a distinct save data encryption/obfuscation technique to prevent save editing.
