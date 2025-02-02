@@ -1,5 +1,6 @@
-#include <openssl/rand.h>
-#include <openssl/evp.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/error.h>
+#include <mbedtls/ccm.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <strings.h>
@@ -203,6 +204,11 @@ int load_file_into_memory(char *path, void **out_contents, u32 *out_size, u32 ex
 		return 0;
 	}
 
+	if (st.st_size > 1024 * 1024) {
+		fprintf(stderr, "[%s] file is too large (1MiB max)\n", path);
+		return 0;
+	}
+
 	size_t mem_size = st.st_size + extra;
 
 	if (load_offset + st.st_size > mem_size) {
@@ -217,7 +223,7 @@ int load_file_into_memory(char *path, void **out_contents, u32 *out_size, u32 ex
 	}
 	memset(mem, 0, mem_size);
 
-	FILE *f = fopen(path, "r");
+	FILE *f = fopen(path, "rb");
 	if (!f || fread(&mem[load_offset], 1, st.st_size, f) != st.st_size) {
 		perror("failed opening/reading from file");
 		if (f) fclose(f);
@@ -281,76 +287,47 @@ namespace swutil {
 	int decrypt(void *input, u8 *key, u32 size) {
 		crypted_file *cf = reinterpret_cast<crypted_file *>(input);
 
-		EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-		if (!ctx) {
-			fprintf(stderr, "could not create EVP cipher context\n");
+		mbedtls_ccm_context ctx;
+		mbedtls_ccm_init(&ctx);
+		mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key, 128);
+		int rv = mbedtls_ccm_auth_decrypt(&ctx, size - sizeof(crypted_file), cf->nonce, sizeof(cf->nonce), NULL, 0, cf->file_data, cf->file_data, cf->ccm_tag, sizeof(cf->ccm_tag));
+		mbedtls_ccm_free(&ctx);
+
+		if (rv != 0) {
+			if (rv == MBEDTLS_ERR_CCM_AUTH_FAILED)
+				fputs("ccm decrypt error: ccm auth failed\n", stderr);
+			else {
+				char error[256 + 1] = { 0 };
+				mbedtls_strerror(rv, error, sizeof(error));
+				fprintf(stderr, "ccm decrypt error: %s\n", error);
+			}
+
 			return 0;
 		}
 
-		if (!EVP_CipherInit(ctx, EVP_aes_128_ccm(), 0, 0, false)) {
-			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher\n");
-			EVP_CIPHER_CTX_free(ctx);
-			return 0;
-		}
-
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, sizeof(crypted_file::nonce), NULL);
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, sizeof(crypted_file::ccm_tag), cf->ccm_tag);
-
-		if (!EVP_DecryptInit(ctx, 0, key, cf->nonce)) {
-			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher for decryption\n");
-			EVP_CIPHER_CTX_free(ctx);
-			return 0;
-		}
-
-		int outl = 0;
-
-		if (!EVP_DecryptUpdate(ctx, cf->file_data, &outl, cf->file_data, size - sizeof(crypted_file))) {
-			fprintf(stderr, "DecryptUpdate failed (possibly authentication failed)\n");
-			EVP_CIPHER_CTX_free(ctx);
-			return 0;
-		}
-
-		EVP_CIPHER_CTX_free(ctx);
 		return 1;
 	}
 
 	int encrypt(void *input, u8 *key, u32 size) {
 		crypted_file *cf = reinterpret_cast<crypted_file *>(input);
 
-		EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-		if (!ctx) {
-			fprintf(stderr, "could not create EVP cipher context\n");
-			return 0;
+		mbedtls_entropy_context rctx;
+		mbedtls_entropy_init(&rctx);
+		mbedtls_entropy_func(&rctx, cf->nonce, sizeof(cf->nonce));
+		mbedtls_entropy_free(&rctx);
+
+		mbedtls_ccm_context ctx;
+		mbedtls_ccm_init(&ctx);
+		mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key, 128);
+		int rv = mbedtls_ccm_encrypt_and_tag(&ctx, size - sizeof(crypted_file), cf->nonce, sizeof(cf->nonce), NULL, 0, cf->file_data, cf->file_data, cf->ccm_tag, sizeof(cf->ccm_tag));
+		mbedtls_ccm_free(&ctx);
+
+		if (rv != 0) {
+			char error[256 + 1] = { 0 };
+			mbedtls_strerror(rv, error, sizeof(error));
+			fprintf(stderr, "ccm encrypt error: %s\n", error);
 		}
 
-		if (!EVP_CipherInit(ctx, EVP_aes_128_ccm(), 0, 0, false)) {
-			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher\n");
-			EVP_CIPHER_CTX_free(ctx);
-			return 0;
-		}
-
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, sizeof(crypted_file::nonce), NULL);
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, sizeof(crypted_file::ccm_tag), NULL);
-
-		memset(cf, 0, sizeof(crypted_file));
-		RAND_bytes(cf->nonce, sizeof(cf->nonce));
-
-		if (!EVP_EncryptInit(ctx, 0, key, cf->nonce)) {
-			fprintf(stderr, "could not initialize AES-128-CCM EVP cipher for encryption\n");
-			EVP_CIPHER_CTX_free(ctx);
-			return 0;
-		}
-
-		int outl = 0;
-
-		if (!EVP_EncryptUpdate(ctx, cf->file_data, &outl, cf->file_data, size - sizeof(crypted_file))) {
-			fprintf(stderr, "EncryptUpdate failed\n");
-			EVP_CIPHER_CTX_free(ctx);
-			return 0;
-		}
-
-		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, sizeof(crypted_file::ccm_tag), cf->ccm_tag);
-		EVP_CIPHER_CTX_free(ctx);
 		return 1;
 	}
 };
@@ -385,7 +362,7 @@ char *save_crypted_file(char *src_filename, void *file, u32 size, bool decrypt, 
 		snprintf(path, path_size, decrypt ? "%s/dec_%s" : "%s/enc_%s", dirn, filen);
 	}
 
-	FILE *o = fopen(path, "w");
+	FILE *o = fopen(path, "wb");
 	if (!o || fwrite(file, 1, size, o) != size) {
 		perror("opening/writing output file failed");
 		if (o) fclose(o);
