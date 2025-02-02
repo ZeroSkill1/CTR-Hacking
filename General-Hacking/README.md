@@ -8,4 +8,4 @@ Current list of patches:
     - Patch to bypass Nintendo Network ID (NNID) checks for badge usage
 - Niconico Patch to allow usage after discontinuation
 - Recochoku Patch to allow usage after discoontinuation
-- Save Data Tool for Snack World Trejarers allowing decryption of save data
+- Save Data Tool for Snack World Trejarers allowing decryption/reencryption of save data

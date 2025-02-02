@@ -2,6 +2,7 @@
 #include <openssl/evp.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
+#include <strings.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -195,7 +196,7 @@ void hexprint(void *input, size_t len, bool upper = false, bool space = false) {
 	fputc('\n', stdout);
 }
 
-int load_file_into_memory(char *path, void **out_contents, u32 *out_size, u32 extra = 0) {
+int load_file_into_memory(char *path, void **out_contents, u32 *out_size, u32 extra = 0, u32 load_offset = 0) {
 	struct stat st;
 	if (stat(path, &st) == -1) {
 		perror("stat failed");
@@ -204,21 +205,25 @@ int load_file_into_memory(char *path, void **out_contents, u32 *out_size, u32 ex
 
 	size_t mem_size = st.st_size + extra;
 
+	if (load_offset + st.st_size > mem_size) {
+		fputs("file load offset out of bounds\n", stderr);
+		return 0;
+	}
+
 	u8 *mem = (u8 *)malloc(mem_size);
 	if (!mem) {
 		fprintf(stderr, "could not allocate %ld bytes for file\n", mem_size);
 		return 0;
 	}
+	memset(mem, 0, mem_size);
 
 	FILE *f = fopen(path, "r");
-	if (!f || fread(mem, 1, st.st_size, f) != st.st_size) {
+	if (!f || fread(&mem[load_offset], 1, st.st_size, f) != st.st_size) {
 		perror("failed opening/reading from file");
 		if (f) fclose(f);
 		free(mem);
 		return 0;
 	}
-
-	if (extra) memset(&mem[st.st_size], 0, extra);
 
 	*out_size = mem_size;
 	*out_contents = mem;
@@ -237,14 +242,30 @@ namespace swutil {
 	};
 
 	static_assert(offsetof(crypted_file, ccm_tag) == 0x10);
+	static_assert(offsetof(crypted_file, file_data) == 0x20);
 	static_assert(sizeof(crypted_file) == 0x20);
 
-	void keygen(void *head, u8 *out_key) {
-		u32 valbase = reinterpret_cast<u32 *>(head)[4] & ~1;
+	int keygen(void *head, u32 head_size, u8 *out_key) {
+		if (head_size < 356) {
+			fprintf(stderr, "head.sw file data is too small\n");
+			return 0;
+		}
 
-		u32 seed_part1 = reinterpret_cast<u32 *>(head)[3];
-		u32 seed_part2 = reinterpret_cast<u32 *>(head)[(0x20 + 0xA0 * valbase + 36) / 4];
-		u8 num_noinput_scrambles = reinterpret_cast<u8 *>(head)[0x20 + 0xA0 * valbase + 0x6C + 6];
+		u32 *head_32 = reinterpret_cast<u32 *>(head);
+
+		u32 valbase = head_32[4] & ~1;
+
+		u32 seed_part2_offset = 0x20 + 0xA0 * valbase + 36;
+		u32 num_noinput_scrambles_offset = 0x20 + 0xA0 * valbase + 0x6C + 6;
+
+		if (num_noinput_scrambles_offset >= head_size || seed_part2_offset >= head_size) {
+			fprintf(stderr, "attempted to access a value in head.sw out of range. abort.\n");
+			return 0;
+		}
+
+		u32 seed_part1 = head_32[3];
+		u32 seed_part2 = head_32[seed_part2_offset / 4];
+		u8 num_noinput_scrambles = reinterpret_cast<u8 *>(head)[num_noinput_scrambles_offset];
 
 		xorshift::algorithm alg(seed_part1 ^ seed_part2);
 
@@ -253,6 +274,8 @@ namespace swutil {
 
 		for (int i = 0; i < 16; i++)
 			out_key[i] = (u8)alg.scramble(0x100);
+
+		return 1;
 	}
 
 	int decrypt(void *input, u8 *key, u32 size) {
@@ -332,58 +355,90 @@ namespace swutil {
 	}
 };
 
-int save_crypted_file(char *src_filename, void *file, u32 size, bool decrypt = true) {
-	size_t path_size = strlen(dirname(src_filename)) + strlen(basename(src_filename)) + sizeof("_xxx.sw") + 2;
-	char *path = (char *)malloc(path_size);
-	path[path_size - 1] = '\0';
-	if (!path) {
-		fprintf(stderr, "could not allocate memory for %s %s path\n", decrypt ? "decrypted" : "encrypted", src_filename);
-		return 0;
+char *save_crypted_file(char *src_filename, void *file, u32 size, bool decrypt, bool inplace) {
+	char *path = NULL;
+	char *dup0 = NULL, *dup1 = NULL;
+
+	if (inplace) {
+		path = src_filename;
 	}
-	snprintf(path, path_size, decrypt ? "%s/dec_%s" : "%s/enc_%s", dirname(src_filename), basename(src_filename));
+	else {
+		dup0 = strdup(src_filename);
+		dup1 = strdup(src_filename);
+		if (!dup0 || !dup1) {
+			fputs("could not duplicate filename for building output file path\n", stderr);
+			if (dup0) free(dup0);
+			if (dup1) free(dup1);
+			return 0;
+		}
+		char *dirn = dirname(dup0);
+		char *filen = basename(dup1);
+		size_t path_size = strlen(dirn) + strlen(filen) + sizeof("_xxx.sw") + 2;
+		path = (char *)malloc(path_size);
+		path[path_size - 1] = '\0';
+		if (!path) {
+			fprintf(stderr, "could not allocate memory for %s %s path\n", decrypt ? "decrypted" : "encrypted", src_filename);
+			free(dup0);
+			free(dup1);
+			return NULL;
+		}
+		snprintf(path, path_size, decrypt ? "%s/dec_%s" : "%s/enc_%s", dirn, filen);
+	}
 
 	FILE *o = fopen(path, "w");
-	fwrite(file, 1, size - sizeof(xorshift::file_wrapper::eof_data), o);
+	if (!o || fwrite(file, 1, size, o) != size) {
+		perror("opening/writing output file failed");
+		if (o) fclose(o);
+		if (!inplace) {
+			free(dup0);
+			free(dup1);
+		}
+		return NULL;
+	}
 	fclose(o);
 
-	printf("%s %s to %s\n", decrypt ? "decrypted" : "encrypted", src_filename, path);
-	free(path);
+	if (!inplace) {
+		free(dup0);
+		free(dup1);
+	}
 
-	return 1;
+	return path;
 }
 
-int main(int argc, char **argv) {
-	/* TODO: add encrypt mode in cli arg handling */
+int run_decrypt(int argc, char **argv, bool inplace) {
 	void *head = NULL;
-	u32 size = 0;
+	u32 head_size = 0;
 
-	if (argc < 2) {
-		fprintf(stderr, "usage: %s <path to head.sw> <path to a save file>\n", argv[0]);
+	if (!load_file_into_memory(argv[1], &head, &head_size)) {
+		fprintf(stderr, "[%s] load failed\n", argv[1]);
 		return 1;
 	}
 
-	if (!load_file_into_memory(argv[1], &head, &size)) {
-		fprintf(stderr, "load head.sw failed\n");
-		return 1;
-	}
-
-	xorshift::file_wrapper xs_headsw(head, size);
+	xorshift::file_wrapper xs_headsw(head, head_size);
 
 	if (!xs_headsw.verify_and_decrypt()) {
-		fprintf(stderr, "xorshift decryption/verification of head.sw failed\n");
+		fprintf(stderr, "[%s] xorshift decryption/verification failed\n", argv[1]);
 		free(head);
 		return 1;
 	}
 
-	if (!save_crypted_file(argv[1], head, size)) {
-		fputs("could not save decrypted head.sw\n", stderr);
+	char *npath = save_crypted_file(argv[1], head, xs_headsw.data_size(), true, inplace);
+	if (!npath) {
+		fprintf(stderr, "[%s] could not save decrypted file\n", argv[1]);
 		free(head);
 		return 1;
 	}
+
+	printf("[%s] saved decrypted version to %s\n", argv[1], npath);
+	if (!inplace) free(npath);
 
 	u8 ccm_key[16] = { 0 };
 
-	swutil::keygen(head, ccm_key);
+	if (!swutil::keygen(head, xs_headsw.data_size(), ccm_key)) {
+		fprintf(stderr, "[%s] could not generate CCM key\n", argv[1]);
+		free(head);
+		return 1;
+	}
 
  	if (argc > 2) {
 		for (int i = 0; i < argc - 2; i++) {
@@ -391,37 +446,163 @@ int main(int argc, char **argv) {
 			u32 savefile_size = 0;
 
 			if (!load_file_into_memory(argv[2 + i], &savefile_contents, &savefile_size)) {
-				fprintf(stderr, "could not open savefile '%s': %s - skipping\n", strerror(errno));
+				fprintf(stderr, "[%s] load failed\n", argv[2 + i]);
 				continue;
 			}
 
 			if (!swutil::decrypt(savefile_contents, ccm_key, savefile_size)) {
-				fprintf(stderr, "aes decrypt failed\n");
+				fprintf(stderr, "[%s] aes decrypt failed\n", argv[2 + i]);
 				free(savefile_contents);
 				continue;
 			}
 
 			savefile_size -= sizeof(swutil::crypted_file);
 
-			xorshift::file_wrapper xs_save(&reinterpret_cast<u8 *>(savefile_contents)[0x20], savefile_size);
+			xorshift::file_wrapper xs_save(reinterpret_cast<swutil::crypted_file *>(savefile_contents)->file_data, savefile_size);
 
 			if (!xs_save.verify_and_decrypt()) {
-				fprintf(stderr, "%s xorshift decrypt/verify failed\n", argv[2 + i]);
+				fprintf(stderr, "[%s] xorshift decryption/verification failed\n", argv[2 + i]);
 				free(savefile_contents);
 				continue;
 			}
 
-			if (!save_crypted_file(argv[2 + i], xs_save.file, xs_save.data_size())) {
-				fprintf(stderr, "could not save decrypted %s\n", argv[2 + i]);
+			char *nspath = save_crypted_file(argv[2 + i], xs_save.file, xs_save.data_size(), true, inplace);
+
+			if (!nspath) {
+				fprintf(stderr, "[%s] save decrypted file failed\n", argv[2 + i]);
 				free(savefile_contents);
 				continue;
 			}
 
+			printf("[%s] saved decrypted version to %s\n", argv[2 + i], nspath);
+
+			if (!inplace) free(nspath);
 			free(savefile_contents);
 		}
 	}
 
 	free(head);
-
 	return 0;
 }
+
+int run_encrypt(int argc, char **argv, bool inplace) {
+	static const u32 generic_reencrypt_extra_size = sizeof(xorshift::file_wrapper::eof_data);
+	static const u32 reencrypt_save_extra_size = generic_reencrypt_extra_size + sizeof(swutil::crypted_file);
+	static_assert(reencrypt_save_extra_size == 40, "invalid save reencrypt data size");
+
+	void *head = NULL;
+	u32 head_size = 0;
+
+	if (!load_file_into_memory(argv[1], &head, &head_size, generic_reencrypt_extra_size)) {
+		fprintf(stderr, "[%s] load failed\n", argv[1]);
+		return 1;
+	}
+
+	xorshift::file_wrapper xs_headsw(head, head_size);
+	u8 ccm_key[16] = { 0 };
+
+	if (!swutil::keygen(head, head_size, ccm_key)) {
+		fprintf(stderr, "[%s] could not generate CCM key\n", argv[1]);
+		free(head);
+		return 1;
+	}
+
+	xs_headsw.encrypt();
+
+	char *npath = save_crypted_file(argv[1], head, xs_headsw.size, false, inplace);
+
+	if (!npath) {
+		fprintf(stderr, "[%s] could not save re-encrypted file\n", argv[1]);
+		free(head);
+		return 1;
+	}
+
+	printf("[%s] saved encrypted version to %s\n", argv[1], npath);
+	if (!inplace) free(npath);
+
+	if (argc > 2) {
+		for (int i = 0; i < argc - 2; i++) {
+			void *savefile_contents = NULL;
+			u32 savefile_size = 0;
+
+			if (!load_file_into_memory(argv[2 + i], &savefile_contents, &savefile_size, reencrypt_save_extra_size, offsetof(swutil::crypted_file, file_data))) {
+				fprintf(stderr, "[%s] load failed\n", argv[2 + i]);
+				continue;
+			}
+
+			swutil::crypted_file *savefile = reinterpret_cast<swutil::crypted_file *>(savefile_contents);
+			xorshift::file_wrapper xs_savefile(savefile->file_data, savefile_size - sizeof(swutil::crypted_file));
+
+			xs_savefile.encrypt();
+
+			if (!swutil::encrypt(savefile, ccm_key, savefile_size)) {
+				fprintf(stderr, "[%s] aes encrypt failed\n", argv[2 + i]);
+				free(savefile_contents);
+				continue;
+			}
+
+			char *nspath = save_crypted_file(argv[2 + i], savefile_contents, savefile_size, false, inplace);
+
+			if (!nspath) {
+				fprintf(stderr, "[%s] save reencrypted file failed\n", argv[2 + i]);
+				free(savefile_contents);
+				continue;
+			}
+
+			printf("[%s] saved encrypted version to %s\n", argv[2 + i], nspath);
+
+			if (!inplace) free(nspath);
+			free(savefile_contents);
+		}
+	}
+
+	free(head);
+	return 0;
+}
+
+#define countof(x) (sizeof(x) / sizeof(x[0]))
+
+
+static const char *progname = "sw-save-tool";
+
+void print_usage() {
+	fprintf(stderr, "usage: %s encrypt/decrypt inplace/separate <path to head.sw> <path to save file>\n", progname);
+	fprintf(stderr, "example: %s decrypt inplace head.sw game1.sw game2.sw\n", progname);
+}
+
+int main(int argc, char **argv) {
+	if (argc < 4) {
+		if (argc) progname = argv[0];
+		print_usage();
+		return 1;
+	}
+
+	struct {
+		const char *cmd;
+		int (* cb)(int, char **, bool);
+	} actions[2] = {
+		{ "decrypt", &run_decrypt },
+		{ "encrypt", &run_encrypt },
+	};
+
+	bool inplace = false;
+
+	if (strncasecmp(argv[2], "inplace", sizeof("inplace") - 1) == 0)
+		inplace = true;
+	else if (strncasecmp(argv[2], "separate", sizeof("separate") - 1) == 0)
+		inplace = false;
+	else {
+		print_usage();
+		return 1;
+	}
+
+	for (int i = 0; i < countof(actions); i++) {
+		if (strncasecmp(argv[1], actions[i].cmd, sizeof("xxcrypt") - 1) == 0)
+			return actions[i].cb(argc - 2, argv + 2, inplace);
+	}
+
+	print_usage();
+	return 1;
+}
+
+#undef countof

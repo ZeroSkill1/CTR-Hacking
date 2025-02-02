@@ -8,15 +8,14 @@ The following security mechanisms are used to prevent save data editing:
 - CRC32 validation of all save files
 - Usage of Secure Values to prevent tampering with the save data
 
-The tool included here is able to:
-- Fully decrypt and deobfuscate all save data files
-- (Coming soon: Fully encrypt and reobfuscate all save data files)
+The tool included here is able to fully decrypt and deobfuscate all save data files, as well as reobfuscating and reencrypting them.
 
 To compile:
 
-`g++ -o decrypt_tool decrypt.cc -lssl -lcrypto -lz`
+`g++ -o sw-save-tool sw-save-tool.cc -lssl -lcrypto -lz`
 
 To use:
 - Extract the extdata for the game.
-- Run `decrypt_tool head.sw [one or more gameN.sw files...]`
-- The tool will save decrypted files in the same location as the source files, each prefixed with `dec_`.
+- Run `sw-save-tool encrypt/decrypt inplace/separate head.sw [one or more gameN.sw files...]`
+    - `encrypt` / `decrypt`: self-explanatory.
+    - `inplace`: modifies the input files in place, `separate`: saves the result of the encryption/decryption in the same folder as the input files, prefixed with `dec_` or `enc_` respectively.
