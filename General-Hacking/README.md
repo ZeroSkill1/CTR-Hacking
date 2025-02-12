@@ -9,3 +9,4 @@ Current list of patches:
 - Niconico Patch to allow usage after discontinuation
 - Recochoku Patch to allow usage after discoontinuation
 - Save Data Tool for Snack World Trejarers allowing decryption/reencryption of save data
+- Bug Fix Patch for Dillon's Dead-Heat Breakers to allow playthrough with pending friend requests
