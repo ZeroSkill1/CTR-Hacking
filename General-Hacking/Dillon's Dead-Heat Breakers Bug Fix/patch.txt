@@ -1,0 +1,31 @@
+; vim: filetype=arm
+.3ds
+.open "code.bin", "patched_code.bin", 0x00100000
+
+.org 0x0036429C ; patch this to load the default mii instead
+bl 0x00393CB4 ; install our smart mii loader
+bl 0x0013A54C ; call the function that previously crashed, now with a fallback mii protecting against this crash
+
+.org 0x00393BF4       ; a default "fallback" mii
+default_mii:
+.incbin "default.mii"
+zero_mii:             ; all zeros mii
+.fill 0x60
+.org 0x00393CB4       ; custom smart mii loader
+push {r0-r9,lr}
+mov r5, r2
+ldr r0, =zero_mii
+mov r1, r0
+mov r2, #0x5C
+blx 0x00100604        ; mii is not all zeros = memcmp(mii, zero_mii, sizeof(mii));
+cmp r0, #0            ; if (mii is not all zeros)
+bne default_call      ;     return normally
+mov r0, r5            ;
+ldr r1, =default_mii  ;
+mov r2, #0x60         ; else
+bl 0x00283EC0         ;     memcpy(mii, default_mii, sizeof(mii)); // basically, overwrite the mii which is all zeros with the fallback mii
+default_call:
+pop {r0-r9,pc}
+.pool
+
+.close
