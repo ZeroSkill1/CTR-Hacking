@@ -10,3 +10,4 @@ Current list of patches:
 - Recochoku Patch to allow usage after discoontinuation
 - Save Data Tool for Snack World Trejarers allowing decryption/reencryption of save data
 - Bug Fix Patch for Dillon's Dead-Heat Breakers to allow playthrough with pending friend requests
+- Chibi-Robo! Photo Finder patch to unlock otherwise inaccessible in-game character outfits
