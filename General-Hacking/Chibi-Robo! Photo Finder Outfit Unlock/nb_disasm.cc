@@ -210,6 +210,17 @@ class Script {
 			ary_get        = 0x3F,
 		};
 
+		struct __attribute__((packed)) imm24 {
+			int32_t get() {
+				int32_t tmp;
+				memcpy(&tmp, this->raw, 3);
+				return tmp & 0x800000 ? 0xFF000000 | tmp : tmp;
+			}
+			uint8_t raw[3];
+		};
+
+		static_assert(sizeof(imm24) == 3);
+
 		struct __attribute__((packed)) insn {
 			opcode op;
 			union {
@@ -223,7 +234,7 @@ class Script {
 					uint16_t arg1;
 				} ver_b;
 				struct __attribute((packed)) {
-					uint32_t arg0 : 24;
+					imm24 arg0;
 				} ver_c;
 			} argdata;
 		};
@@ -343,25 +354,13 @@ class Script {
 						offset_printf("ldr_extfn R%d, ='%s'\n", cur.argdata.ver_b.arg0, this->ExternFunctions[cur.argdata.ver_b.arg1]->name);
 						break;
 					case opcode::jump:
-						{
-							uint32_t offs = cur.argdata.ver_c.arg0;
-							signed int adj_offs = offs & 0x800000 ? 0xFF000000 | offs : offs;
-							offset_printf("jump =0x%X\n", offset + adj_offs * 4);
-						}
+						offset_printf("jump =0x%X\n", offset + cur.argdata.ver_c.arg0.get() * 4);
 						break;
 					case opcode::jumptrue:
-						{
-							uint32_t offs = cur.argdata.ver_c.arg0;
-							signed int adj_offs = offs & 0x800000 ? 0xFF000000 | offs : offs;
-							offset_printf("jumptrue =0x%X\n", offset + adj_offs * 4);
-						}
+						offset_printf("jumptrue =0x%X\n", offset + cur.argdata.ver_c.arg0.get() * 4);
 						break;
 					case opcode::jumpfalse:
-						{
-							uint32_t offs = cur.argdata.ver_c.arg0;
-							signed int adj_offs = offs & 0x800000 ? 0xFF000000 | offs : offs;
-							offset_printf("jumpfalse =0x%X\n", offset + adj_offs * 4);
-						}
+						offset_printf("jumpfalse =0x%X\n", offset + cur.argdata.ver_c.arg0.get() * 4);
 						break;
 					case opcode::call:
 						if (cur.argdata.ver_a.arg1) offset_printf("call_loc R%d\n", cur.argdata.ver_a.arg0);
@@ -446,11 +445,7 @@ class Script {
 						offset_printf("set_var R%d, R%d, R%d\n", cur.argdata.ver_a.arg0, cur.argdata.ver_a.arg1, cur.argdata.ver_a.arg2);
 						break;
 					case opcode::function:
-						{
-							uint32_t offs = cur.argdata.ver_c.arg0;
-							signed int adj_offs = offs & 0x800000 ? 0xFF000000 | offs : offs;
-							offset_printf("function '%s'\n", cst<FunctionEntry *>(&this->ScriptData[offset + adj_offs * 4])->name);
-						}
+						offset_printf("function '%s'\n", cst<FunctionEntry *>(&this->ScriptData[offset + cur.argdata.ver_c.arg0.get() * 4])->name);
 						break;
 					case opcode::perf_log:
 						offset_printf("perf_log R%d\n", cur.argdata.ver_a.arg0);
