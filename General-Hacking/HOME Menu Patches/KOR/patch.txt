@@ -14,4 +14,9 @@ pop {r4-r6, pc}
 .org 0x0026F574 ; patch out nnid check on badge data creation
 b 0x0026F594 ; skip the check
 
+.org 0x00280BD4 ; enable theme related buttons
+mov r1, #0
+nop
+nop
+
 .close
